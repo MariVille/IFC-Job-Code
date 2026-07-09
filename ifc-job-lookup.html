@@ -6,404 +6,150 @@
 <title>IFC Job Lookup</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
   
-  header { background: #1a1a2e; padding: 20px 24px; display: flex; align-items: center; gap: 12px; }
-  header h1 { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
-  header span { color: #a0aec0; font-size: 13px; }
-  .logo { background: #e8b84b; color: #1a1a2e; font-weight: 800; font-size: 13px; padding: 6px 10px; border-radius: 6px; letter-spacing: 1px; }
-
-  .search-bar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 16px 24px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  .search-wrap { max-width: 700px; margin: 0 auto; position: relative; }
-  .search-wrap input { width: 100%; padding: 12px 16px 12px 44px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; background: #f8fafc; }
-  .search-wrap input:focus { border-color: #e8b84b; background: #fff; }
-  .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 18px; }
-  .search-hint { margin-top: 8px; font-size: 12px; color: #a0aec0; text-align: center; }
-
-  .stats { max-width: 960px; margin: 16px auto 0; padding: 0 24px; display: flex; gap: 12px; flex-wrap: wrap; }
-  .stat { background: #fff; border-radius: 8px; padding: 10px 16px; font-size: 12px; color: #718096; border: 1px solid #e2e8f0; }
-  .stat strong { color: #1a1a2e; font-size: 16px; display: block; }
-
-  .results { max-width: 960px; margin: 16px auto 32px; padding: 0 24px; }
-  .result-count { font-size: 12px; color: #718096; margin-bottom: 10px; }
-
-  .card { background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 10px; overflow: hidden; transition: box-shadow 0.15s; }
-  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-  .card-header { padding: 14px 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
-  .job-code { background: #1a1a2e; color: #e8b84b; font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 6px; font-family: monospace; white-space: nowrap; }
-  .job-name { font-weight: 600; font-size: 15px; flex: 1; }
-  .client-name { font-size: 12px; color: #718096; }
-  .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
-  .active { background: #c6f6d5; color: #276749; }
-  .complete { background: #e2e8f0; color: #4a5568; }
-  .chevron { color: #a0aec0; font-size: 12px; transition: transform 0.2s; }
-  .card.open .chevron { transform: rotate(180deg); }
-
-  .card-body { display: none; padding: 0 18px 14px; border-top: 1px solid #f0f2f5; }
-  .card.open .card-body { display: block; }
-  .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
-  .detail-item label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #a0aec0; font-weight: 600; display: block; margin-bottom: 3px; }
-  .detail-item .val { font-size: 13px; color: #2d3748; }
-  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-  .tag { background: #f0f2f5; color: #4a5568; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
-  .tag.highlight { background: #fef9e7; color: #b7791f; border: 1px solid #f6e05e; }
-
-  .issue-banner { background: #fff5f5; border: 1px solid #fed7d7; border-radius: 6px; padding: 6px 10px; margin-top: 8px; font-size: 12px; color: #c53030; }
-
-  .empty { text-align: center; padding: 48px 24px; color: #a0aec0; }
-  .empty .icon { font-size: 40px; margin-bottom: 12px; }
-
-  .add-btn { position: fixed; bottom: 24px; right: 24px; background: #e8b84b; color: #1a1a2e; border: none; border-radius: 50px; padding: 12px 20px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 16px rgba(232,184,75,0.4); display: flex; align-items: center; gap: 6px; }
-  .add-btn:hover { background: #d4a43a; }
-
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: #fff; border-radius: 12px; padding: 24px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-  .modal h2 { font-size: 16px; margin-bottom: 16px; }
-  .modal input, .modal textarea { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; margin-bottom: 10px; font-family: inherit; outline: none; }
-  .modal input:focus, .modal textarea:focus { border-color: #e8b84b; }
-  .modal label { font-size: 12px; color: #718096; display: block; margin-bottom: 4px; font-weight: 600; }
-  .modal-btns { display: flex; gap: 8px; margin-top: 8px; }
-  .btn-save { background: #1a1a2e; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 600; cursor: pointer; flex: 1; }
-  .btn-cancel { background: #f0f2f5; color: #4a5568; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 600; cursor: pointer; }
-
-  .updated { font-size: 11px; color: #a0aec0; margin-top: 4px; }
+  header { background: #1a1a2e; color: white; padding: 20px 24px; }
+  header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: 0.3px; }
+  header p { font-size: 0.8rem; color: #8899aa; margin-top: 4px; }
+  
+  .search-bar { background: white; padding: 16px 24px; border-bottom: 1px solid #e0e4ea; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .search-bar input { width: 100%; padding: 10px 16px; border: 1.5px solid #d0d5dd; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+  .search-bar input:focus { border-color: #1a1a2e; }
+  .search-bar .meta { font-size: 0.78rem; color: #888; margin-top: 8px; }
+  
+  .filter-bar { background: white; padding: 8px 24px 12px; border-bottom: 1px solid #e0e4ea; display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn { padding: 4px 12px; border-radius: 20px; border: 1.5px solid #d0d5dd; background: white; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; color: #444; }
+  .filter-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+  .filter-btn:hover:not(.active) { border-color: #1a1a2e; color: #1a1a2e; }
+  
+  .results { padding: 16px 24px; max-width: 1100px; margin: 0 auto; }
+  
+  .job-card { background: white; border-radius: 10px; padding: 16px 20px; margin-bottom: 10px; border: 1px solid #e0e4ea; transition: box-shadow 0.15s; }
+  .job-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  
+  .card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .job-code { background: #1a1a2e; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; font-family: monospace; white-space: nowrap; flex-shrink: 0; }
+  .job-name { font-size: 1rem; font-weight: 600; color: #1a1a2e; }
+  .job-client { font-size: 0.82rem; color: #666; margin-top: 2px; }
+  
+  .status-badge { margin-left: auto; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; flex-shrink: 0; }
+  .status-Active { background: #e6f7ee; color: #1a7a45; }
+  .status-Complete { background: #f0f0f0; color: #666; }
+  
+  .card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.82rem; }
+  .card-field label { color: #888; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px; }
+  .card-field span { color: #333; }
+  
+  .notes-flag { margin-top: 10px; padding: 8px 12px; background: #fff8e6; border-left: 3px solid #f59e0b; border-radius: 0 6px 6px 0; font-size: 0.8rem; color: #92400e; }
+  .notes-hold { background: #fff0f0; border-left-color: #ef4444; color: #991b1b; }
+  
+  .no-results { text-align: center; padding: 48px 24px; color: #888; }
+  .no-results h3 { font-size: 1.1rem; margin-bottom: 8px; }
+  
+  @media (max-width: 600px) { .card-body { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">IFC</div>
-  <div>
-    <h1>Job Lookup</h1>
-    <span>Inline Flooring Concepts — Job Reference</span>
-  </div>
+  <h1>IFC Job Lookup</h1>
+  <p>Inline Flooring Concepts Pty Ltd — Updated 9 Jul 2026</p>
 </header>
 
 <div class="search-bar">
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Search by job code, address, supplier, PO number, client..." autocomplete="off">
-    <div class="search-hint">Type anything — job code (3552), address (80 Collins), supplier, PO number, description</div>
-  </div>
+  <input type="text" id="searchInput" placeholder="Search by job code, name, client, address, supplier, PO number..." oninput="search()">
+  <div class="meta" id="resultCount"></div>
 </div>
 
-<div class="stats">
-  <div class="stat"><strong id="totalCount">0</strong>Total Jobs</div>
-  <div class="stat"><strong id="activeCount">0</strong>Active</div>
-  <div class="stat"><strong id="completeCount">0</strong>Complete</div>
-  <div class="stat"><strong id="clientCount">0</strong>Clients</div>
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+  <button class="filter-btn" onclick="setFilter('Active', this)">Active</button>
+  <button class="filter-btn" onclick="setFilter('Complete', this)">Complete</button>
+  <button class="filter-btn" onclick="setFilter('hold', this)">⏳ HOLD</button>
+  <button class="filter-btn" onclick="setFilter('mccormack', this)">McCormack</button>
+  <button class="filter-btn" onclick="setFilter('capabuild', this)">CapaBuild</button>
+  <button class="filter-btn" onclick="setFilter('insite', this)">Insite Projects</button>
 </div>
 
-<div class="results">
-  <div class="result-count" id="resultCount"></div>
-  <div id="jobList"></div>
-</div>
-
-<button class="add-btn" onclick="openModal()">+ Add Job</button>
-
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <h2>Add / Update Job</h2>
-    <label>Job Code *</label>
-    <input type="text" id="mCode" placeholder="e.g. 3661">
-    <label>Job Name *</label>
-    <input type="text" id="mName" placeholder="e.g. 10B 469 Latrobe St">
-    <label>Client</label>
-    <input type="text" id="mClient" placeholder="e.g. McCormack">
-    <label>Status</label>
-    <input type="text" id="mStatus" placeholder="Active or Complete">
-    <label>Addresses / Site locations (comma separated)</label>
-    <input type="text" id="mAddresses" placeholder="e.g. 469 Latrobe St, Melbourne">
-    <label>Suppliers (comma separated)</label>
-    <input type="text" id="mSuppliers" placeholder="e.g. Intafloors, Classic Architecture">
-    <label>PO Numbers (comma separated)</label>
-    <input type="text" id="mPos" placeholder="e.g. 603, 597, 598">
-    <label>Invoice / Supplier Refs (comma separated)</label>
-    <input type="text" id="mRefs" placeholder="e.g. INV-0561, TAX INVOICE 108979">
-    <label>Issues / Notes</label>
-    <textarea id="mIssues" rows="2" placeholder="e.g. Duplicate code — also exists as J1145"></textarea>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveJob()">Save Job</button>
-    </div>
-  </div>
-</div>
+<div class="results" id="results"></div>
 
 <script>
-// ─── BASE DATA (from Buildxact export + audit) ───────────────────────────────
-let jobsData = [
-  { number:"3661", description:"10B 469 Latrobe St", client:"McCormack", status:"Active", addresses:["16/52 Corporate Blvd","Bayswater","469 Latrobe St","Melbourne"], suppliers:["Phillip Duke","Jocelyn","Emma Hall"], refs:[], pos:["603","597","598"], issues:"Missing from Xero — tracking category created 25 Jun 2026" },
-  { number:"3658", description:"FP&TL orders", client:"Unassigned", status:"Active", addresses:["Bayswater","16/52 Corporate Blvd","Boronia"], suppliers:["Intafloors","Armstrong","Dean Bunter","Emma Hall"], refs:["INVfis","INV698","3565","024555"], pos:["550","587","549","551"], issues:"No client assigned in Buildxact. Possible duplicate of J1164." },
-  { number:"3657", description:"600 Bourke Clyde & Co", client:"McCormack", status:"Active", addresses:["600 Bourke St","Melbourne","Bayswater","16/52 Corporate Blvd"], suppliers:["Havwoods","Polyflor","Nick Cunningham","Emma Hall"], refs:["INV326","INV589"], pos:["574","544","543","545"], issues:"Missing from Xero — tracking category to be created" },
-  { number:"3656", description:"Plan Group Office", client:"Plan Group", status:"Active", addresses:["Bayswater","16/52 Corporate Blvd"], suppliers:["Signature"], refs:[], pos:["527"], issues:"Missing from Xero — tracking category to be created" },
-  { number:"3655", description:"RMIT B253", client:"CapaBuild Pty Ltd", status:"Active", addresses:["Bundoora","Bundoora Campus","16/52 Corporate Blvd","Bayswater"], suppliers:["Gerflor","Courtney Haines","Armstrong"], refs:[], pos:["526","525","578"], issues:"" },
-  { number:"3653", description:"Flemington Hospital", client:"DSA", status:"Active", addresses:["The Royal Melbourne Hospital","Parkville"], suppliers:["Ray","F.I.S Preston","Intafloors","Vas","Sophie Donis"], refs:["I-00504626","I-00505633","INV-0382","4300305656"], pos:["506","507","508","588","538"], issues:"Blank stub exists in Xero — has transactions, recode required" },
-  { number:"3562", description:"Meta - 51 Flinders Ln", client:"Shape", status:"Active", addresses:["51 Flinders Ln","51 Flinders Lane","Melbourne","Bayswater","16/52 Corporate Blvd"], suppliers:["Intafloors","Davis dos Santos","Ben Massey","ALI","Nick McMicking"], refs:["TAX INVOICE I-00505021","INV-0741","TAX INVOICE I-00504772","8100276590"], pos:["599","547","566","592","499","497","581","524","541","593"], issues:"Blank stub exists in Xero — has transactions, recode required. Metro Express invoice 00009945M has a line for this job." },
-  { number:"3561", description:"Smith and Deli Degraves", client:"Indetail Projects", status:"Complete", addresses:["16 Degraves St","Melbourne","Degraves St"], suppliers:["jawed","Intafloors","Courtney Haines"], refs:["NV-0037","6199411","TAX INVOICE I-00503365","TAX INVOICE I-00503441"], pos:["480","479","453","456"], issues:"" },
-  { number:"3560", description:"TSG Richmond Repair", client:"TSG", status:"Active", addresses:["288 Bridge Rd","Richmond"], suppliers:["Ray","Vas"], refs:[], pos:["436","437"], issues:"Blank stub exists in Xero — has transactions, recode required" },
-  { number:"J1145", description:"Kieser Essendon", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["26 Leake St","Essendon","Essendon VIC 3040"], suppliers:["GO AHEAD LABOUR HIRE","Intafloors","Dayne Wilkinson","Dtac","F.I.S. Distributors Knox"], refs:["2527","TAX INVOICE I-00504451","TAX INVOICE I-00504805","INV625"], pos:["521","517","570","595","583","546","533","433","531","540"], issues:"DUPLICATE CODE — same job as 3558 Essendon Kieser. Same address: 26 Leake St Essendon. Both have real transactions. $6,906 direct costs, $6,756 bank on J1145. Daniel to confirm master code." },
-  { number:"3558", description:"Essendon Kieser", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["26 Leake St","Essendon","Essendon VIC 3040"], suppliers:["Alberto Mariona","Ali Caulker"], refs:[], pos:["596","594"], issues:"DUPLICATE CODE — same job as J1145 Kieser Essendon. 3558 has estimate Q1121-Q6271, 100% invoiced in Buildxact. $53,218 revenue, $5,277 direct costs in Tracking Summary. Daniel to confirm master code." },
-  { number:"3556", description:"Hawks House", client:"Hawks", status:"Active", addresses:["68 Humber Rd","Croydon North","Bayswater","16/52 Corporate Blvd"], suppliers:["Frankie Flooring","Havwoods"], refs:[], pos:["391","548","375"], issues:"" },
-  { number:"3555", description:"Vic Uni Amenities", client:"CapaBuild Pty Ltd", status:"Active", addresses:["Mills Cl","Bayswater","16/52 Corporate Blvd","Boronia"], suppliers:["Intafloors","Rory Knowles","Ben Massey","Signature","ALI"], refs:["8100276016","4300306415","4300306377"], pos:["532","530","601","459","590","579","465","577","487","604"], issues:"Naming mismatch — Buildxact: '25-014.04 Vic Uni Amenities', Xero: 'EQ Rutherford'. Also known as: Farnsworth Ave Footscray (Rory Knowles invoice site)." },
-  { number:"3553", description:"Bar Julietta", client:"Piccolo Projects", status:"Complete", addresses:["200 Toorak Rd","South Yarra"], suppliers:["REZZA TILEING","F.I.S. Distributors Knox","Mahmoud Jaza","Armstrong"], refs:["INV-021481","150","I-00500457"], pos:["360","368","359","454","358"], issues:"Blank stub exists in Xero — has transactions, recode required" },
-  { number:"3552", description:"80 Collins St L9,10,25", client:"McCormack", status:"Active", addresses:["80 Collins St","Melbourne","Bayswater","16/52 Corporate Blvd"], suppliers:["GO AHEAD LABOUR HIRE","Intafloors","Perini","Alex Ackerman"], refs:["Tax Invoice No: 371","Invoice No.: 17187","7020410","Invoice No.: 17173"], pos:["502","511","537","602","523","425","429","552","600","557"], issues:"Blank stub exists in Xero — very large balance $304k, recode required. Metro Express invoice 00009945M has a line for this job (80 Collins)." },
-  { number:"3550", description:"NDIA Footscray", client:"CapaBuild Pty Ltd", status:"Active", addresses:["1 McNab Ave","Footscray","Bayswater","16/52 Corporate Blvd"], suppliers:["Intafloors","Mario Antonio","F.I.S Preston","Alex Ackerman","Birrus Matting"], refs:["70203781","TAX INVOICE I-00502676","Invoice Number INV-16714","70202863"], pos:["482","448","460","432","504","350","488","569","476","435"], issues:"Blank stub exists in Xero — $173k+ asset, $17,348 liability, recode required" },
-  { number:"3549", description:"Grand Junction Hotel", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["Grand Junction Hotel","Princes Hwy & Franklin St","Traralgon","Bayswater"], suppliers:["Ben Massey","jawed","Vas","Mahmoud Jaza","Allcare"], refs:["PSI409079","INV0038"], pos:["390","455","382","381","349","392","353","441","496","348"], issues:"" },
-  { number:"3547", description:"Insignia Financial", client:"", status:"Active", addresses:[], suppliers:[], refs:[], pos:[], issues:"Xero only — no Buildxact match" },
-  { number:"3545", description:"Banners Pub", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["740 Bourke St","Docklands"], suppliers:["Richard","jawed","Nick Aylward","Vas","Billy Dixon"], refs:["INV030"], pos:["306","495","345","336","341"], issues:"Naming mismatch — Xero calls it 'Banners Bar'" },
-  { number:"3544", description:"Pay.com.au", client:"CapaBuild Pty Ltd", status:"Active", addresses:["206 High St","Windsor","Bayswater","16/52 Corporate Blvd"], suppliers:["Intafloors","Mario Antonio","Dayne Wilkinson","jawed"], refs:["INV567","INV789","Sunshine PSI406233"], pos:["403","438","396","534","421","420","289","380","415","444"], issues:"Blank stub exists in Xero — $8,527 revenue + $9,380 asset, recode required" },
-  { number:"3543", description:"Virtual School", client:"Virtual School Victoria", status:"Active", addresses:["315 Clarendon St","Thornbury","Bayswater"], suppliers:["Alberto Mariona","Adam Tester","Skips.com.au","Metro","Emma Hall"], refs:["00009612M","70201985","1814","INV-0441"], pos:["362","376","264","263","407"], issues:"" },
-  { number:"3541", description:"Kieser Naree Warren", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["Kieser Narre Warren","Narre Warren"], suppliers:["Andy Baker","Taylor","will"], refs:[], pos:["324","314","339","311","355"], issues:"Naming mismatch — Xero: 'Kieser Narre Warren', Buildxact: 'Kieser Naree Warren'" },
-  { number:"3540", description:"Pallas Group", client:"McCormack", status:"Active", addresses:["122 Moray St","South Melbourne","16/52 Corporate Blvd"], suppliers:["RC&D","Intafloors","Made By Storey","GO AHEAD LABOUR HIRE","Alberto Mariona","Classic Architecture"], refs:["TAX INVOICE I-00504415","TAX INVOICE I-00505299","TAX INVOICE I-00504566","108979"], pos:["248","262","563","249","505","568","491","522","561","556"], issues:"Blank stub exists in Xero — $83k+ asset, $8,312 liability, recode required" },
-  { number:"3539", description:"2 Silicon Place", client:"Gesalt Projects", status:"Complete", addresses:["2 Silicon Pl","Tullamarine"], suppliers:["Angelo","Vas","John Mulder","Mahmoud Jaza","Troy Kampus"], refs:["19811245080","19811499780","19811424920"], pos:["310","254","245","253","320"], issues:"Naming mismatch — Xero has '3539.2 Silicon Place'. May be different stage. Confirm with Daniel." },
-  { number:"3532", description:"Kieser Maroochydore", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["19 Plaza Parade","Maroochydore"], suppliers:["Kain Baskaya","Birrus Matting","Vas","Courtney Haines","Prestige Porcelain"], refs:[], pos:["330","273","290","271","272","331","325"], issues:"" },
-  { number:"3528", description:"Quintessential Equity", client:"McCormack", status:"Complete", addresses:["l3/90 Collins St","Melbourne","Bayswater","16/52 Corporate Blvd"], suppliers:["Intafloors","Armstrong","tessarifloors","Sophie Donis"], refs:[], pos:["267","154","151","153","240","155","156","250","152","241"], issues:"" },
-  { number:"3527", description:"L1 Capital Minor Works", client:"", status:"Active", addresses:[], suppliers:[], refs:[], pos:[], issues:"No client assigned in Buildxact" },
-  { number:"3522", description:"RLA Match Call", client:"Insite Projects", status:"Active", addresses:["200 Batman Ave","Melbourne","Bayswater"], suppliers:["Sophie Donis","Ray","Vas","Emma Hall"], refs:["PO420315"], pos:["114","116","113","115"], issues:"" },
-  { number:"3520", description:"888 Collins Street Docklands", client:"888 Collins St Facilities Management", status:"Active", addresses:["888 Collins St","Docklands","Bayswater"], suppliers:["Vas","Adam Tester","Nick McMicking"], refs:["90050537","INV-0406","19811249500"], pos:["108","110","109","575"], issues:"" },
-  { number:"3519", description:"Schnitz Warrnambool", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["Warrnambool","Bayswater","16/52 Corporate Blvd"], suppliers:["Stone & Tile Centre"], refs:["SC-PO422311"], pos:["106"], issues:"" },
-  { number:"3518", description:"Maroondah Hospital Patching", client:"Plan Group", status:"Active", addresses:["Davey Dr","Ringwood East"], suppliers:["Vas","Dan Cran","Armstrong"], refs:["PSI333087","INV-013904","INV-0018"], pos:["96","95","94"], issues:"" },
-  { number:"3515", description:"RMIT B85", client:"CapaBuild Pty Ltd", status:"Complete", addresses:["99 Franklin St","Melbourne","Bayswater"], suppliers:["Nick Aylward","Vas","Mahmoud Jaza","Sophie Donis"], refs:["INV-1800"], pos:["140","91","128","150","160","129","142","78"], issues:"" },
-  { number:"3511", description:"Kieser Mont Albert", client:"Kieser Australia", status:"Active", addresses:["733 Whitehorse Rd","Mont Albert"], suppliers:["Andy Baker","Vas","will"], refs:["INV22"], pos:["265","472","450","494","449","266","535"], issues:"" },
-  { number:"3508.1", description:"Kieser Geelong L1", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["51 W Fyans St","Newtown","95 Eastern Beach Rd","Geelong"], suppliers:["Andy Baker","Alberto Mariona","will"], refs:[], pos:["323","283","326","313"], issues:"Missing from Xero — Xero only has 3508 Kieser Geelong (parent job)" },
-  { number:"3504", description:"Allstorm Newport", client:"Enviro Property Services", status:"Complete", addresses:["Champion Rd","Newport","Bayswater","16/52 Corporate Blvd"], suppliers:["Carlos Mariona","Alberto Mariona","Vas","Sophie Donis","Dan Cran"], refs:["PSI323685","27942704","27932322","INV-0017"], pos:["71","64","43","44","90","65","66","42","92"], issues:"" },
-  { number:"3502", description:"Commons South Yarra", client:"CapaBuild Pty Ltd", status:"Active", addresses:["189 Toorak Rd","South Yarra","Bayswater","16/52 Corporate Blvd"], suppliers:["Armstrong","Carlos Mariona","Ben Massey","Nick Cunningham","Spectrum Floor"], refs:["I-00493387","19732180550","18919611090"], pos:["219","344","199","189","83","79","201","332","82","84"], issues:"Blank stub exists in Xero — $6,908 revenue + $7,598 asset, recode required. Buildxact name: '25-004.14 Commons South Yarra'" },
-  { number:"3496", description:"Sofitel", client:"Plan Group", status:"Complete", addresses:["35 Collins St","Melbourne"], suppliers:["Mario Antonio","Alberto Mariona","Classic Architecture","Andy Baker"], refs:["TAX INVOICE NO. 106303-A","108427"], pos:["385","383","387","8","14","388","32","386","389","384"], issues:"Naming mismatch — Buildxact: 'Soffitel', Xero: 'L35 Sofitel'. Also known as L35 Sofitel, job 3496." },
-  { number:"3494", description:"Watsonia RSL", client:"Insite Projects", status:"Active", addresses:["8 Morwell Ave","Watsonia"], suppliers:["ALI","Kennards","MJS Floorcoverings"], refs:["PSI432234","370","28657468"], pos:["493","397"], issues:"MJS invoice PSI432234 received — supplier provided job code but no PO. Awaiting PO." },
-  { number:"3472.1", description:"AGL Level 12", client:"CapaBuild Pty Ltd", status:"Active", addresses:["699 Bourke St","Docklands","Bayswater","16/52 Corporate Blvd"], suppliers:["Richard","Signature","jawed","Vas","Kelm Hire"], refs:["INV-0032","00009612M","PSI400424","110288","6162866"], pos:["365","417","366","369","334","335","406"], issues:"Blank stub exists in Xero — safe to archive (no transactions on blank). Also known as 'L12 AGL' in Xero (separate entry — confirm if same)." },
-  { number:"3472 L3", description:"AGL Level 3", client:"CapaBuild Pty Ltd", status:"Complete", addresses:["699 Bourke St","Docklands","AGL"], suppliers:["Armstrong","Vas","Courtney Haines","will","Andy Baker"], refs:["INV-023823"], pos:["93","498","25","159","158"], issues:"Possible duplicate of J1070 AGL L3 — confirm with Daniel" },
-  { number:"3470", description:"Vic Uni Stage 2", client:"CapaBuild Pty Ltd", status:"Active", addresses:["Bayswater","16/52 Corporate Blvd","Boronia"], suppliers:["Dtac","Ben Massey","Kelm Hire","will","Adam Tester"], refs:["00009612M","PSI402796","2531","00009642M"], pos:["416","17","184","463","337","395","440","443","516","529"], issues:"Blank stub in Xero — safe to archive (no transactions on blank)" },
-  { number:"3465", description:"Triology Building", client:"Triology", status:"Complete", addresses:["201 High St","Prahran","Bayswater","16/52 Corporate Blvd"], suppliers:["Angelo","Adam Tester"], refs:["Triumph","Airlay"], pos:["7","3","60"], issues:"" },
-  { number:"3458", description:"Grandview Hotel Brunswick", client:"Insite Projects", status:"Active", addresses:["47 Pearson St","Brunswick West","Bayswater","16/52 Corporate Blvd"], suppliers:["Armstrong","jawed","F.I.S. Distributors Knox","Mahmoud Jaza","Tim"], refs:["TAX INVOICE I-00503842","00009826M","Tax Invoice I-644075"], pos:["475","468","469","471","316","489","329","315"], issues:"Blank stub exists in Xero — $8,891 revenue + assets, recode required" },
-  { number:"3450", description:"Grilled Collingwood", client:"Insite Projects Australia Pty Ltd", status:"Complete", addresses:["Collingwood"], suppliers:[], refs:[], pos:[], issues:"Missing from Xero. Possibly same as Xero code 3500 Grilled Collingwood — confirm with Daniel" },
-  { number:"J1145", description:"Kieser Essendon", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["26 Leake St","Essendon"], suppliers:["GO AHEAD LABOUR HIRE","Intafloors","Dayne Wilkinson"], refs:[], pos:["521","517","570","595"], issues:"DUPLICATE — see 3558 Essendon Kieser" },
-  { number:"J1103", description:"L2 242 Caroline Springs Blvd", client:"Gesalt Projects", status:"Complete", addresses:["l2/242 Caroline Springs Blvd","Caroline Springs","Bayswater","16/52 Corporate Blvd"], suppliers:["Angelo","ALI","Alberto Mariona","Brad Healey","Adam Tester"], refs:[], pos:["230","235","231","238","236"], issues:"Possible duplicate of Xero 3536 '242 Carline Springs' — confirm with Daniel" },
-  { number:"J1102", description:"Merch Girls", client:"", status:"Complete", addresses:["High St","Prahran","Bayswater","16/52 Corporate Blvd"], suppliers:["Troy Kampus","Alberto Mariona","Vas"], refs:[], pos:["242","269","297"], issues:"Possible duplicate of Xero 3531. Blank stub in Xero has $1,235 direct costs — recode required." },
-  { number:"J1101", description:"RMIT Building 12 Lab Refresh", client:"CapaBuild Pty Ltd", status:"Complete", addresses:["402 Swanston St","Melbourne","Bayswater"], suppliers:["Mahmoud Jaza","tessarifloors","Ben Massey"], refs:[], pos:["224","226","298"], issues:"Possible duplicate of Xero 3534 RMIT B12 — confirm with Daniel" },
-  { number:"J1098", description:"AGL Level 11", client:"CapaBuild Pty Ltd", status:"Complete", addresses:["Docklands","699 Bourke St","Bayswater","16/52 Corporate Blvd"], suppliers:["Vas","Nick McMicking","Tim","Taylor","Emma Hall"], refs:[], pos:["205","260","252","204","282","270"], issues:"Blank stub in Xero — safe to archive (no transactions on blank)" },
-  { number:"J1097", description:"Keiser South Melbourne", client:"Keiser", status:"Complete", addresses:["41 Cecil St","South Melbourne"], suppliers:["Richard"], refs:[], pos:["213"], issues:"Note spelling: Keiser (not Kieser). No Xero tracking category exists. Confirm with Daniel." },
-  { number:"J1096", description:"L20 Asahi", client:"McCormack", status:"Complete", addresses:["2 Freshwater Pl","Southbank"], suppliers:["Benny Walton","ALI","Vas","Daniel Pereira","Peter Dunn"], refs:[], pos:["296","165","163","308","164","301","327","214","363"], issues:"" },
-  { number:"J1095", description:"L19 Asahi", client:"McCormack", status:"Complete", addresses:["2 Freshwater Pl","Southbank","Bayswater"], suppliers:["Signature","ALI","Vas","Tommy Snowdon"], refs:[], pos:["309","180","179","177","299","217","256","277","328","178"], issues:"" },
-  { number:"J1092", description:"L18 Asahi", client:"McCormack", status:"Complete", addresses:["2 Freshwater Pl","Southbank"], suppliers:["ALI","Vas","Daniel Pereira"], refs:[], pos:["174","176","234","175","255","216"], issues:"" },
-  { number:"J1090", description:"L17 Asahi", client:"McCormack", status:"Complete", addresses:["2 Freshwater Pl","Southbank"], suppliers:["Ray","Mario Antonio","Vas","Mahmoud Jaza"], refs:[], pos:["211","259","305","172","312","171","209","222","261","173"], issues:"" },
-  { number:"J1088", description:"L16 Asahi", client:"McCormack", status:"Complete", addresses:["2 Freshwater Pl","Southbank"], suppliers:["Vas","Dan Cran","Daniel Pereira"], refs:[], pos:["170","257","169","215","168"], issues:"" },
-  { number:"J1087", description:"L13 Asahi", client:"McCormack", status:"Complete", addresses:["2 Freshwater Pl","Southbank"], suppliers:["ALI","Vas"], refs:[], pos:["210","166","167"], issues:"" },
-  { number:"J1083", description:"Monash Building 6", client:"CapaBuild Pty Ltd", status:"Complete", addresses:["Wellington Rd","Clayton","Bayswater","16/52 Corporate Blvd"], suppliers:["CTA GROUP","Adam Tester","Emma Hall"], refs:[], pos:["268","247","246","274","251"], issues:"Blank stub in Xero — safe to archive (no transactions on blank). Possible duplicate of 3529 Monash Uni GF — confirm." },
-  { number:"J1082", description:"Koko Black Crown", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["Unit 129/27 Whiteman St","Southbank"], suppliers:["musafa"], refs:[], pos:["147"], issues:"" },
-  { number:"J1081", description:"TGI Melbourne Central", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["Cnr LaTrobe and Swanston Streets","Melbourne"], suppliers:["musafa"], refs:[], pos:["146"], issues:"" },
-  { number:"J1080", description:"Vogt Port Melbourne", client:"Insite Projects Australia Pty Ltd", status:"Active", addresses:["84 Bay St","Port Melbourne","Bayswater"], suppliers:["RESSA TIELING","Peter","Courtney Haines"], refs:["INV030"], pos:["279","144","143","292","145"], issues:"" },
-  { number:"J1070", description:"AGL L3", client:"CapaBuild Pty Ltd", status:"Complete", addresses:["699 Bourke St","Docklands","Bayswater"], suppliers:["jawed","Gerflor","Alberto Mariona","Vas","Courtney Haines"], refs:["MJS","1761"], pos:["149","196","130","183","102","105","136","137","194","197"], issues:"Possible duplicate of 3472 L3 AGL Level 3 — confirm with Daniel" },
-  { number:"8799", description:"AGL Level 9", client:"CapaBuild Pty Ltd", status:"Complete", addresses:["664 Collins St","Docklands","Bayswater"], suppliers:["Alberto Mariona","Vas","Nick McMicking","REZZA TILEING"], refs:[], pos:["280","192","223","162","182","193","212","103","104"], issues:"Non-standard 8xxx job number — should be sub-job of 3472 AGL. Large balances ($392k+). Do not archive — flag to Daniel." },
-  { number:"IFC 3499", description:"Style Craft", client:"CapaBuild Pty Ltd", status:"Complete", addresses:["379 Collins St","Melbourne"], suppliers:["jawed","Shamael","musafa"], refs:[], pos:["118","37","119","49","38","54"], issues:"Non-standard IFC prefix in Buildxact. Xero has plain 3499. Same job — align naming." },
-  { number:"J1139", description:"TEST PROJECT", client:"DP", status:"Complete", addresses:["Banff","Alberta"], suppliers:["Daniel Pereira"], refs:["TEST"], pos:["373","372"], issues:"TEST job — archive immediately" },
-  { number:"J1106", description:"634 Test", client:"TEST", status:"Complete", addresses:["Bayswater"], suppliers:["Alex Ackerman"], refs:[], pos:["244"], issues:"TEST job — archive immediately" },
-];
+const JOBS = [{"code": "3386", "name": "Vic Uni", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match. $31535.93 in direct costs in Xero. Flag to Megan — confirm correct job and recode."}, {"code": "3458", "name": "Grandview Hotel Brunswick", "client": "Insite Projects", "status": "Active", "address": "47 Pearson St Brunswick West", "suppliers": "Armstrong, jawed, F.I.S. Distributors Knox, Mahmoud Jaza, Tim", "pos": "0475,0468,0469,0471,0316,0489,0329,0315", "notes": "Blank stub recoded and deleted 9 Jul 2026"}, {"code": "3463", "name": "TSG Frankston", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3465", "name": "Triology Building", "client": "Triology", "status": "Active", "address": "201 High St Prahran", "suppliers": "Angelo, Adam Tester", "pos": "0007,0003,0060", "notes": "Open balances in Xero — Issue 6 monthly review"}, {"code": "3469", "name": "Telix", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3470", "name": "Vic Uni Stage 2", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "Bayswater, Boronia", "suppliers": "Dtac, Ben Massey, Kelm Hire, will, Adam Tester", "pos": "0416,0017,0184,0463,0337,0395,0440,0443,0516,0529", "notes": "Blank stub deleted 9 Jul 2026"}, {"code": "3472", "name": "AGL L3 7 8 9 10", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "699 Bourke St Docklands", "suppliers": "", "pos": "", "notes": ""}, {"code": "3472 L3", "name": "AGL Level 3", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "699 Bourke St Docklands", "suppliers": "Armstrong, Vas, Courtney Haines, will, Andy Baker", "pos": "0093,0498,0025,0159,0158", "notes": "Open balances — Issue 6 monthly review. Also exists in Buildxact as J1070 (separate job per Megan)"}, {"code": "3472.1", "name": "AGL Level 12", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "699 Bourke St Docklands", "suppliers": "Richard, Signature, jawed, Vas, Kelm Hire", "pos": "0365,0417,0366,0369,0334,0335,0406", "notes": "Blank stub deleted 9 Jul 2026. L12 Agl renamed to this"}, {"code": "3475", "name": "Chisholm Building R", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3483", "name": "JKA Turnstile", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3486", "name": "Chisolm Building L", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3491", "name": "L25 Collins", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3494", "name": "Watsonia RSL", "client": "Insite Projects", "status": "Active", "address": "8 Morwell Ave Watsonia", "suppliers": "ALI, Kennards, MJS Floorcoverings", "pos": "0493,0397", "notes": "MJS invoice PSI432234 — job confirmed, PO still outstanding"}, {"code": "3495", "name": "FCDO", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3496", "name": "Sofitel", "client": "Plan Group", "status": "Active", "address": "35 Collins St Melbourne", "suppliers": "Mario Antonio, Alberto Mariona, Classic Architecture, Andy Baker", "pos": "0385,0383,0387,0008,0014,0388,0032,0386,0389,0384", "notes": "Open balances — Issue 6 monthly review"}, {"code": "3497", "name": "JCA Merch Store", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3498", "name": "Chargrilled Charlies", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3499", "name": "Style Craft", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "379 Collins St Melbourne", "suppliers": "jawed, Shamael, musafa", "pos": "0118,0037,0119,0049,0038,0054", "notes": "IFC 3499 was Buildxact ref only — never a duplicate in Xero"}, {"code": "3500", "name": "Grilled Collingwood", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3501", "name": "Coffee Club Doncaster", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3502", "name": "Commons South Yarra", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "189 Toorak Rd South Yarra", "suppliers": "Armstrong, Carlos Mariona, Ben Massey, Nick Cunningham", "pos": "0219,0344,0199,0189,0083,0079,0201,0332", "notes": "Blank stub recoded and deleted 9 Jul 2026"}, {"code": "3503", "name": "Kieser Mossman", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3504", "name": "Allstorm Newport", "client": "Enviro Property Services", "status": "Active", "address": "Champion Rd Newport", "suppliers": "Carlos Mariona, Alberto Mariona, Vas, Sophie Donis", "pos": "0071,0064,0043,0044,0090,0065,0066,0042,0092", "notes": "Open balances — Issue 6 monthly review"}, {"code": "3506", "name": "TGIF Doncaster", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3507", "name": "Monza Imports", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3508.1", "name": "Kieser Geelong L1", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "95 Eastern Beach Rd Geelong", "suppliers": "Andy Baker, Alberto Mariona, will", "pos": "0323,0283,0326,0313", "notes": "Renamed from 3508 - Kieser Geelong on 9 Jul 2026. No plain 3508 exists in Buildxact"}, {"code": "3509", "name": "Monza Showroom", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3510", "name": "Western Health", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3511", "name": "Kieser Mont Albert", "client": "Kieser Australia", "status": "Active", "address": "733 Whitehorse Rd Mont Albert", "suppliers": "Andy Baker, Vas, will", "pos": "0265,0472,0450,0494,0449,0266,0535", "notes": "No issues found"}, {"code": "3513", "name": "Cunningham Aspendale", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3515", "name": "RMIT B85", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "99 Franklin St Melbourne", "suppliers": "Nick Aylward, Vas, Mahmoud Jaza, Sophie Donis", "pos": "0140,0091,0128,0150,0160,0129,0142,0078", "notes": "Open balances — Issue 6 monthly review"}, {"code": "3516", "name": "Kieser Glenelg", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3517", "name": "St Kilda Beach Hotel", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3518", "name": "Maroondah Hospital Patching", "client": "Plan Group", "status": "Active", "address": "Davey Dr Ringwood East", "suppliers": "Vas, Dan Cran, Armstrong", "pos": "0096,0095,0094", "notes": "No issues found"}, {"code": "3519", "name": "Schnitz Warrnambool", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "50 Liebig St Warrnambool", "suppliers": "Stone & Tile Centre", "pos": "0106", "notes": "No issues found"}, {"code": "3520", "name": "888 Collins Street Docklands", "client": "888 Collins St Facilities Management", "status": "Active", "address": "888 Collins St Docklands", "suppliers": "Vas, Adam Tester, Nick McMicking", "pos": "0108,0110,0109,0575", "notes": "No issues found"}, {"code": "3522", "name": "RLA Match", "client": "Insite Projects", "status": "Active", "address": "200 Batman Ave Melbourne", "suppliers": "Sophie Donis, Ray, Vas, Emma Hall", "pos": "0114,0116,0113,0115", "notes": "No issues found"}, {"code": "3523", "name": "Asahi", "client": "McCormack", "status": "Active", "address": "2 Freshwater Pl Southbank", "suppliers": "", "pos": "", "notes": ""}, {"code": "3525", "name": "Mind Fish", "client": "In-line Projects", "status": "Active", "address": "l4/116 Rokeby St Collingwood", "suppliers": "", "pos": "", "notes": "Open balances — Issue 6 monthly review"}, {"code": "3527", "name": "L1 Capital Minor Works", "client": "Unassigned", "status": "Active", "address": "90 Collins St Melbourne", "suppliers": "", "pos": "", "notes": "No client assigned in Buildxact — confirm with Daniel"}, {"code": "3528", "name": "Quintessential Equity", "client": "McCormack", "status": "Active", "address": "l3/90 Collins St Melbourne", "suppliers": "Intafloors, Armstrong, tessarifloors, Sophie Donis", "pos": "0267,0154,0151,0153,0240,0155,0156,0250,0152,0241", "notes": "Open balances — Issue 6 monthly review"}, {"code": "3529", "name": "Monash uni GF", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "Wellington Rd Clayton", "suppliers": "", "pos": "", "notes": "J1083 deleted in cleanup — 3529 is master"}, {"code": "3531", "name": "Merch Girls", "client": "Unknown", "status": "Active", "address": "High St Prahran", "suppliers": "Troy Kampus, Alberto Mariona, Vas", "pos": "0242,0269,0297", "notes": "No Buildxact match. J1102 may be separate job — confirm with Megan"}, {"code": "3532", "name": "Kieser Maroochydore", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "19 Plaza Parade Maroochydore", "suppliers": "Kain Baskaya, Birrus Matting, Vas, Courtney Haines", "pos": "0330,0273,0290,0271,0272,0331,0325", "notes": "No issues found"}, {"code": "3534", "name": "RMIT B12", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "402 Swanston St Melbourne", "suppliers": "Mahmoud Jaza, tessarifloors, Ben Massey", "pos": "0224,0226,0298", "notes": "J1101 deleted in cleanup — 3534 is master"}, {"code": "3535", "name": "419 flinders lane comms", "client": "Unknown", "status": "Active", "address": "419 Flinders Ln Melbourne", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3536", "name": "242 Carline springs", "client": "Gesalt Projects", "status": "Active", "address": "242 Caroline Springs Blvd", "suppliers": "Angelo, ALI, Alberto Mariona, Brad Healey, Adam Tester", "pos": "0230,0235,0231,0238,0236", "notes": "J1103 not in Xero — no action needed"}, {"code": "3537", "name": "HFW splashback", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "CBD Melbourne", "suppliers": "", "pos": "", "notes": "Blank stub deleted 9 Jul 2026"}, {"code": "3538", "name": "Kieser SM", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3539", "name": "2 Silicon Place", "client": "Gesalt Projects", "status": "Active", "address": "2 Silicon Pl Tullamarine", "suppliers": "Angelo, Vas, John Mulder, Mahmoud Jaza, Troy Kampus", "pos": "0310,0254,0245,0253,0320", "notes": "Open balances — Issue 6 monthly review. Confirm with Daniel whether same as 3539.2"}, {"code": "3540", "name": "Pallas Group", "client": "McCormack", "status": "Active", "address": "122 Moray St South Melbourne", "suppliers": "RC&D, Intafloors, GO AHEAD LABOUR HIRE, Alberto Mariona, Classic Architecture", "pos": "0248,0262,0563,0249,0505,0568,0491,0522,0561,0556", "notes": "Blank stub recoded and deleted 9 Jul 2026"}, {"code": "3541", "name": "Kieser Naree Warren", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "Narre Warren", "suppliers": "Andy Baker, Taylor, will", "pos": "0324,0314,0339,0311,0355", "notes": "Renamed Kieser Narre Warren to Kieser Naree Warren 9 Jul 2026 — matches Buildxact spelling"}, {"code": "3542", "name": "Camberwell Clinic", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3543", "name": "Virtual school", "client": "Virtual School Victoria", "status": "Active", "address": "315 Clarendon St Thornbury", "suppliers": "Alberto Mariona, Adam Tester, Metro", "pos": "0362,0376,0264,0263,0407", "notes": "No issues found"}, {"code": "3544", "name": "Pay.Com.Au", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "206 High St Windsor", "suppliers": "Intafloors, Mario Antonio, Dayne Wilkinson, jawed", "pos": "0403,0438,0396,0534,0421,0420,0289,0380,0415,0444", "notes": "Blank stub recoded and deleted 9 Jul 2026"}, {"code": "3545", "name": "Banners Pub", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "740 Bourke St Docklands", "suppliers": "Richard, jawed, Nick Aylward, Vas, Billy Dixon", "pos": "0306,0495,0345,0336,0341", "notes": "Renamed Banners Bar to Banners Pub 9 Jul 2026 — matches Buildxact"}, {"code": "3547", "name": "Insignia Financial", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3549", "name": "Grand Junction Hotel", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "Traralgon", "suppliers": "Ben Massey, jawed, Vas, Mahmoud Jaza", "pos": "0390,0455,0382,0381,0349,0392,0353,0441,0496,0348", "notes": "Blank stub deleted 9 Jul 2026"}, {"code": "3550", "name": "NDIA Footscray", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "1 McNab Ave Footscray", "suppliers": "Intafloors, Mario Antonio, F.I.S Preston, Birrus Matting", "pos": "0482,0448,0460,0432,0504,0350,0488,0569,0476,0435", "notes": "Blank stub deleted 9 Jul 2026 (had no transactions)"}, {"code": "3551", "name": "PG office", "client": "Unknown", "status": "Active", "address": "155 Cremorne St Cremorne", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3552", "name": "L9 10 & 25 80 Collins", "client": "McCormack", "status": "Active", "address": "80 Collins St Melbourne", "suppliers": "GO AHEAD LABOUR HIRE, Intafloors, Perini, Alex Ackerman", "pos": "0502,0511,0537,0602,0523,0425,0429,0552,0600,0557", "notes": "Blank stub recoded and deleted 9 Jul 2026. Renamed to 3552 - L9 10 & 25 80 Collins"}, {"code": "3553", "name": "Bar Julietta", "client": "Piccolo Projects", "status": "Active", "address": "200 Toorak Rd South Yarra", "suppliers": "REZZA TILEING, F.I.S. Distributors Knox, Mahmoud Jaza, Armstrong", "pos": "0360,0368,0359,0454,0358", "notes": "Blank stub recoded and deleted 9 Jul 2026. Open balances — Issue 6 monthly review"}, {"code": "3555", "name": "Vic Uni Amenities", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "Farnsworth Ave Footscray", "suppliers": "Intafloors, Rory Knowles, Ben Massey, Signature, ALI", "pos": "0532,0530,0601,0459,0590,0579,0487,0577,0604", "notes": "Renamed IFC3555 Vic Uni Amenities to 3555 - Vic Uni Amenities 9 Jul 2026. Empty stub 3555 - EQ Rutherford deleted"}, {"code": "3556", "name": "Hawks House", "client": "Hawks", "status": "Active", "address": "Port Melbourne", "suppliers": "Frankie Flooring, Havwoods", "pos": "0391,0548,0375", "notes": "No issues found"}, {"code": "3557", "name": "Benetas St george", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "3558", "name": "Kieser Essendon", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "26 Leake St Essendon", "suppliers": "Alberto Mariona, Ali Caulker", "pos": "0596,0594", "notes": "Blank stub deleted 9 Jul 2026. HOLD — confirm master vs J1145 with Megan"}, {"code": "3559", "name": "Kieser Rosebud", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match. Renamed from KIESER ROSEBUD to Kieser Rosebud 9 Jul 2026"}, {"code": "3560", "name": "TSG Richmond", "client": "TSG", "status": "Active", "address": "288 Bridge Rd Richmond", "suppliers": "Ray, Vas", "pos": "0436,0437", "notes": "Blank stub recoded and deleted 9 Jul 2026"}, {"code": "3561", "name": "Smith and Deli Degraves", "client": "Indetail Projects", "status": "Active", "address": "16 Degraves St Melbourne", "suppliers": "jawed, Intafloors, Courtney Haines", "pos": "0480,0479,0453,0456", "notes": "Blank stub recoded and deleted 9 Jul 2026"}, {"code": "3562", "name": "Meta - 51 Flinders Ln", "client": "Shape", "status": "Active", "address": "51 Flinders Ln Melbourne", "suppliers": "Intafloors, Davis dos Santos, Ben Massey, ALI, Nick McMicking", "pos": "0499,0497,0581,0524,0541,0593,0599,0547,0566,0592", "notes": "Blank stub recoded and deleted 9 Jul 2026"}, {"code": "3653", "name": "Flemington Hospital", "client": "DSA", "status": "Active", "address": "Parkville", "suppliers": "Ray, F.I.S Preston, Intafloors, Vas, Sophie Donis", "pos": "0506,0507,0508,0588,0538", "notes": "Blank stub recoded and deleted 9 Jul 2026"}, {"code": "3655", "name": "RMIT B253", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "Bundoora campus", "suppliers": "Gerflor, Courtney Haines, Armstrong", "pos": "0526,0525,0578", "notes": "Tracking category created 9 Jul 2026"}, {"code": "3656", "name": "Plan Group Office", "client": "Plan Group", "status": "Active", "address": "155 Cremorne St Cremorne", "suppliers": "Signature", "pos": "0527", "notes": "Tracking category created 9 Jul 2026"}, {"code": "3657", "name": "Bourke Clyde & Co", "client": "McCormack", "status": "Active", "address": "600 Bourke St Melbourne", "suppliers": "Havwoods, Polyflor, Nick Cunningham, Emma Hall", "pos": "0574,0544,0543,0545", "notes": "No issues found"}, {"code": "3658", "name": "FP&TL Orders", "client": "Unassigned", "status": "Active", "address": "Bayswater, Boronia", "suppliers": "Intafloors, Armstrong, Dean Bunter, Emma Hall", "pos": "0550,0587,0549,0551", "notes": "J1164 recoded to 3658 and deleted 9 Jul 2026"}, {"code": "3660", "name": "Varsity", "client": "IPA", "status": "Active", "address": "93-97 Maroondah Hwy Ringwood", "suppliers": "", "pos": "", "notes": ""}, {"code": "3661", "name": "10B 469 Latrobe St", "client": "McCormack", "status": "Active", "address": "469 Latrobe St Melbourne", "suppliers": "Phillip Duke, Jocelyn, Emma Hall", "pos": "0603,0597,0598", "notes": "Tracking category created 25 Jun 2026. Client McCormack Estimate 6556"}, {"code": "J1012", "name": "St Kilda Rd", "client": "Unknown", "status": "Active", "address": "", "suppliers": "", "pos": "", "notes": "No Buildxact match — confirm with Daniel"}, {"code": "J1080", "name": "Vogt Port Melbourne", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "84 Bay St Port Melbourne", "suppliers": "RESSA TIELING, Peter, Courtney Haines", "pos": "0279,0144,0143,0292,0145", "notes": "No issues found"}, {"code": "J1081", "name": "TGI Melbourne Central", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "Cnr LaTrobe and Swanston Streets Melbourne", "suppliers": "musafa", "pos": "0146", "notes": "No issues found"}, {"code": "J1082", "name": "Koko Black Crown", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "Unit 129/27 Whiteman St Southbank", "suppliers": "musafa", "pos": "0147", "notes": "No issues found"}, {"code": "J1087", "name": "L13 Asahi", "client": "McCormack", "status": "Active", "address": "2 Freshwater Pl Southbank", "suppliers": "ALI, Vas", "pos": "0210,0166,0167", "notes": "Open balances — Issue 6 monthly review"}, {"code": "J1088", "name": "L16 Asahi", "client": "McCormack", "status": "Active", "address": "2 Freshwater Pl Southbank", "suppliers": "Vas, Dan Cran, Daniel Pereira", "pos": "0170,0257,0169,0215,0168", "notes": "Open balances — Issue 6 monthly review"}, {"code": "J1090", "name": "L17 Asahi", "client": "McCormack", "status": "Active", "address": "2 Freshwater Pl Southbank", "suppliers": "Ray, Mario Antonio, Vas, Mahmoud Jaza", "pos": "0211,0259,0305,0172,0312,0171,0209,0222,0261,0173", "notes": "Open balances — Issue 6 monthly review"}, {"code": "J1092", "name": "L18 Asahi", "client": "McCormack", "status": "Active", "address": "2 Freshwater Pl Southbank", "suppliers": "ALI, Vas, Daniel Pereira", "pos": "0174,0176,0234,0175,0255,0216", "notes": "Open balances — Issue 6 monthly review"}, {"code": "J1095", "name": "L19 Asahi", "client": "McCormack", "status": "Active", "address": "2 Freshwater Pl Southbank", "suppliers": "Signature, ALI, Vas, Tommy Snowdon", "pos": "0309,0180,0179,0177,0299,0217,0256,0277,0328,0178", "notes": "Open balances — Issue 6 monthly review"}, {"code": "J1096", "name": "L20 Asahi", "client": "McCormack", "status": "Active", "address": "2 Freshwater Pl Southbank", "suppliers": "Benny Walton, ALI, Vas, Daniel Pereira, Peter Dunn", "pos": "0296,0165,0163,0308,0164,0301,0327,0214,0363", "notes": "Open balances — Issue 6 monthly review"}, {"code": "J1098", "name": "AGL Level 11", "client": "CapaBuild Pty Ltd", "status": "Active", "address": "699 Bourke St Docklands", "suppliers": "Vas, Nick McMicking, Tim, Taylor, Emma Hall", "pos": "0205,0260,0252,0204,0282,0270", "notes": "Open balances $106k+ — Issue 6 monthly review. Blank stub deleted 9 Jul 2026"}, {"code": "J1102", "name": "Merch Girls", "client": "Unassigned", "status": "Active", "address": "High St Prahran", "suppliers": "Troy Kampus, Alberto Mariona, Vas", "pos": "0242,0269,0297", "notes": "HOLD — confirm with Megan whether same job as 3531 or separate before recoding blank stub"}, {"code": "J1145", "name": "Kieser Essendon", "client": "Insite Projects Australia Pty Ltd", "status": "Active", "address": "26 Leake St Essendon", "suppliers": "GO AHEAD LABOUR HIRE, Intafloors, Dayne Wilkinson", "pos": "0521,0517,0570,0595,0583,0546,0533,0433,0531,0540", "notes": "HOLD — confirm master vs 3558 with Megan. J1145 has 15 POs (active). 3558 has 2 POs"}];
 
-// Load any locally added jobs from localStorage
-function loadLocalJobs() {
-  try {
-    const saved = localStorage.getItem('ifc_extra_jobs');
-    if (saved) {
-      const extras = JSON.parse(saved);
-      extras.forEach(extra => {
-        const idx = jobsData.findIndex(j => j.number === extra.number);
-        if (idx >= 0) jobsData[idx] = extra;
-        else jobsData.push(extra);
-      });
-    }
-  } catch(e) {}
+let currentFilter = 'all';
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  search();
 }
 
-function saveLocalJobs(newJob) {
-  try {
-    const saved = localStorage.getItem('ifc_extra_jobs');
-    const extras = saved ? JSON.parse(saved) : [];
-    const idx = extras.findIndex(j => j.number === newJob.number);
-    if (idx >= 0) extras[idx] = newJob;
-    else extras.push(newJob);
-    localStorage.setItem('ifc_extra_jobs', JSON.stringify(extras));
-  } catch(e) {}
-}
-
-// Stats
-function updateStats(filtered) {
-  document.getElementById('totalCount').textContent = jobsData.length;
-  document.getElementById('activeCount').textContent = jobsData.filter(j => j.status === 'Active').length;
-  document.getElementById('completeCount').textContent = jobsData.filter(j => j.status === 'Complete').length;
-  const clients = new Set(jobsData.filter(j => j.client).map(j => j.client));
-  document.getElementById('clientCount').textContent = clients.size;
-}
-
-function search(query) {
-  if (!query) return jobsData;
-  const q = query.toLowerCase();
-  return jobsData.filter(j => {
-    return (
-      j.number.toLowerCase().includes(q) ||
-      j.description.toLowerCase().includes(q) ||
+function search() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  let filtered = JOBS;
+  
+  // Apply status/type filter
+  if (currentFilter === 'Active') filtered = filtered.filter(j => j.status === 'Active');
+  else if (currentFilter === 'Complete') filtered = filtered.filter(j => j.status === 'Complete');
+  else if (currentFilter === 'hold') filtered = filtered.filter(j => j.notes.toLowerCase().includes('hold'));
+  else if (currentFilter === 'mccormack') filtered = filtered.filter(j => j.client.toLowerCase().includes('mccormack'));
+  else if (currentFilter === 'capabuild') filtered = filtered.filter(j => j.client.toLowerCase().includes('capabuild'));
+  else if (currentFilter === 'insite') filtered = filtered.filter(j => j.client.toLowerCase().includes('insite'));
+  
+  // Apply text search
+  if (q) {
+    filtered = filtered.filter(j => 
+      j.code.toLowerCase().includes(q) ||
+      j.name.toLowerCase().includes(q) ||
       j.client.toLowerCase().includes(q) ||
-      j.status.toLowerCase().includes(q) ||
-      j.addresses.some(a => a.toLowerCase().includes(q)) ||
-      j.suppliers.some(s => s.toLowerCase().includes(q)) ||
-      j.refs.some(r => r.toLowerCase().includes(q)) ||
-      j.pos.some(p => p.toLowerCase().includes(q)) ||
-      (j.issues && j.issues.toLowerCase().includes(q))
+      j.address.toLowerCase().includes(q) ||
+      j.suppliers.toLowerCase().includes(q) ||
+      j.pos.toLowerCase().includes(q) ||
+      j.notes.toLowerCase().includes(q)
     );
-  });
-}
-
-function highlight(text, query) {
-  if (!query || !text) return text;
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark style="background:#fef9e7;border-radius:2px;padding:0 1px">$1</mark>');
-}
-
-function renderJobs(jobs, query) {
-  const container = document.getElementById('jobList');
-  const countEl = document.getElementById('resultCount');
-
-  if (jobs.length === 0) {
-    container.innerHTML = `<div class="empty"><div class="icon">🔍</div><div>No jobs found for "${query}"</div><div style="font-size:12px;margin-top:8px">Try a different keyword, address, or PO number</div></div>`;
-    countEl.textContent = '';
+  }
+  
+  const container = document.getElementById('results');
+  const count = document.getElementById('resultCount');
+  count.textContent = filtered.length + ' job' + (filtered.length !== 1 ? 's' : '') + ' found';
+  
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="no-results"><h3>No jobs found</h3><p>Try a different search term</p></div>';
     return;
   }
-
-  countEl.textContent = query ? `${jobs.length} result${jobs.length !== 1 ? 's' : ''} for "${query}"` : `Showing all ${jobs.length} jobs`;
-
-  container.innerHTML = jobs.map((j, i) => {
-    const q = query ? query.toLowerCase() : '';
-    const matchedAddresses = q ? j.addresses.filter(a => a.toLowerCase().includes(q)) : j.addresses.slice(0,2);
-    const matchedSuppliers = q ? j.suppliers.filter(s => s.toLowerCase().includes(q)) : j.suppliers.slice(0,3);
-    const matchedPos = q ? j.pos.filter(p => p.toLowerCase().includes(q)) : j.pos.slice(0,5);
-    const matchedRefs = q ? j.refs.filter(r => r.toLowerCase().includes(q)) : j.refs.slice(0,3);
-    const allAddresses = q ? j.addresses : j.addresses.slice(0,4);
-    const allSuppliers = q ? j.suppliers : j.suppliers.slice(0,5);
-    const allPos = q ? j.pos : j.pos.slice(0,8);
-    const allRefs = q ? j.refs : j.refs.slice(0,4);
-
-    return `
-    <div class="card" id="card-${i}">
-      <div class="card-header" onclick="toggleCard(${i})">
-        <span class="job-code">${highlight(j.number, query)}</span>
-        <div style="flex:1;min-width:0">
-          <div class="job-name">${highlight(j.description, query)}</div>
-          <div class="client-name">${highlight(j.client || '—', query)}</div>
+  
+  container.innerHTML = filtered.map(j => {
+    const isHold = j.notes.toLowerCase().includes('hold');
+    const hasNotes = j.notes && j.notes.trim();
+    const noteClass = isHold ? 'notes-hold' : 'notes-flag';
+    const notesHtml = hasNotes ? `<div class="${noteClass}">${escHtml(j.notes)}</div>` : '';
+    
+    return `<div class="job-card">
+      <div class="card-header">
+        <span class="job-code">${escHtml(j.code)}</span>
+        <div>
+          <div class="job-name">${escHtml(j.name)}</div>
+          <div class="job-client">${escHtml(j.client)}</div>
         </div>
-        <span class="status-badge ${j.status === 'Active' ? 'active' : 'complete'}">${j.status}</span>
-        <span class="chevron">▼</span>
+        <span class="status-badge status-${j.status}">${j.status}</span>
       </div>
       <div class="card-body">
-        <div class="detail-grid">
-          <div class="detail-item">
-            <label>Job Code</label>
-            <div class="val" style="font-weight:700;font-size:15px;font-family:monospace">${j.number}</div>
-          </div>
-          <div class="detail-item">
-            <label>Client / Builder</label>
-            <div class="val">${j.client || '—'}</div>
-          </div>
-          <div class="detail-item">
-            <label>Status</label>
-            <div class="val">${j.status}</div>
-          </div>
-          <div class="detail-item" style="grid-column:1/-1">
-            <label>Site Addresses</label>
-            <div class="tags">${allAddresses.map(a => `<span class="tag ${q && a.toLowerCase().includes(q) ? 'highlight' : ''}">${highlight(a,query)}</span>`).join('')}</div>
-          </div>
-          <div class="detail-item" style="grid-column:1/-1">
-            <label>Suppliers</label>
-            <div class="tags">${allSuppliers.map(s => `<span class="tag ${q && s.toLowerCase().includes(q) ? 'highlight' : ''}">${highlight(s,query)}</span>`).join('')}</div>
-          </div>
-          <div class="detail-item" style="grid-column:1/-1">
-            <label>PO Numbers</label>
-            <div class="tags">${allPos.map(p => `<span class="tag ${q && p.toLowerCase().includes(q) ? 'highlight' : ''}">${highlight(p,query)}</span>`).join('')}${j.pos.length > 8 && !q ? `<span class="tag">+${j.pos.length-8} more</span>` : ''}</div>
-          </div>
-          <div class="detail-item" style="grid-column:1/-1">
-            <label>Invoice / Supplier Refs</label>
-            <div class="tags">${allRefs.map(r => `<span class="tag ${q && r.toLowerCase().includes(q) ? 'highlight' : ''}">${highlight(r,query)}</span>`).join('')}</div>
-          </div>
-        </div>
-        ${j.issues ? `<div class="issue-banner">⚠️ ${j.issues}</div>` : ''}
-        <div style="text-align:right;margin-top:8px">
-          <button onclick="editJob('${j.number}')" style="font-size:12px;color:#718096;background:none;border:none;cursor:pointer;text-decoration:underline">Edit this job</button>
-        </div>
+        ${j.address ? `<div class="card-field"><label>Site Address</label><span>${escHtml(j.address)}</span></div>` : ''}
+        ${j.pos ? `<div class="card-field"><label>PO Numbers</label><span>${escHtml(j.pos)}</span></div>` : ''}
+        ${j.suppliers ? `<div class="card-field" style="grid-column:1/-1"><label>Known Suppliers</label><span>${escHtml(j.suppliers)}</span></div>` : ''}
       </div>
+      ${notesHtml}
     </div>`;
   }).join('');
 }
 
-function toggleCard(i) {
-  const card = document.getElementById(`card-${i}`);
-  card.classList.toggle('open');
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-let currentQuery = '';
-document.getElementById('searchInput').addEventListener('input', function() {
-  currentQuery = this.value.trim();
-  const results = search(currentQuery);
-  renderJobs(results, currentQuery);
-});
-
-function openModal(prefill) {
-  document.getElementById('modalOverlay').classList.add('open');
-  if (prefill) {
-    document.getElementById('mCode').value = prefill.number || '';
-    document.getElementById('mName').value = prefill.description || '';
-    document.getElementById('mClient').value = prefill.client || '';
-    document.getElementById('mStatus').value = prefill.status || '';
-    document.getElementById('mAddresses').value = (prefill.addresses||[]).join(', ');
-    document.getElementById('mSuppliers').value = (prefill.suppliers||[]).join(', ');
-    document.getElementById('mPos').value = (prefill.pos||[]).join(', ');
-    document.getElementById('mRefs').value = (prefill.refs||[]).join(', ');
-    document.getElementById('mIssues').value = prefill.issues || '';
-  } else {
-    ['mCode','mName','mClient','mStatus','mAddresses','mSuppliers','mPos','mRefs','mIssues'].forEach(id => document.getElementById(id).value = '');
-  }
-}
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-}
-
-function editJob(code) {
-  const job = jobsData.find(j => j.number === code);
-  if (job) openModal(job);
-}
-
-function saveJob() {
-  const code = document.getElementById('mCode').value.trim();
-  const name = document.getElementById('mName').value.trim();
-  if (!code || !name) { alert('Job Code and Job Name are required.'); return; }
-  const newJob = {
-    number: code,
-    description: name,
-    client: document.getElementById('mClient').value.trim(),
-    status: document.getElementById('mStatus').value.trim() || 'Active',
-    addresses: document.getElementById('mAddresses').value.split(',').map(s=>s.trim()).filter(Boolean),
-    suppliers: document.getElementById('mSuppliers').value.split(',').map(s=>s.trim()).filter(Boolean),
-    pos: document.getElementById('mPos').value.split(',').map(s=>s.trim()).filter(Boolean),
-    refs: document.getElementById('mRefs').value.split(',').map(s=>s.trim()).filter(Boolean),
-    issues: document.getElementById('mIssues').value.trim(),
-  };
-  const idx = jobsData.findIndex(j => j.number === code);
-  if (idx >= 0) jobsData[idx] = newJob;
-  else jobsData.push(newJob);
-  saveLocalJobs(newJob);
-  closeModal();
-  updateStats();
-  const results = search(currentQuery);
-  renderJobs(results, currentQuery);
-}
-
-document.getElementById('modalOverlay').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-
-// Init
-loadLocalJobs();
-updateStats();
-renderJobs(jobsData, '');
+// Initial render
+search();
 </script>
 </body>
 </html>
